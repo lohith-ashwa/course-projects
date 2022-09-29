@@ -1,0 +1,22 @@
+help(kmeans)
+getwd()
+setwd("C:/Users/Lohith/Documents")
+kmeansdata=read.csv("Kmeans data.csv")
+View(kmeansdata)
+campaigndata=kmeansdata[4:5]
+View(campaigndata)
+set.seed(123)
+wcss=vector()
+for(i in 1:10)
+wcss[i]=sum(kmeans(campaigndata,i)$withinss)
+plot(1:10,wcss,type = "b",xlab="no of clusters",ylab="wcss")
+install.packages("cluster")
+library(cluster)
+km=kmeans(campaigndata,4)
+km$size
+cluster_no=km$cluster
+cluster_campaigndata=cbind(campaigndata,cluster_no)
+clusplot(campaigndata,km$cluster,lines = 0,shade = TRUE,color = TRUE,labels = 2,xlab = "Income",ylab = "spendingscore")
+help("set.seed")
+help("withinss")
+help("cluster")

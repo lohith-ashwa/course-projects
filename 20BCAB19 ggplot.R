@@ -1,0 +1,7 @@
+plot(iris$Sepal.Length)
+text(iris$Sepal.Length,cex=0.6,pos=4, col="red")
+plot(iris$Sepal.Length,type = "l")
+barplot(iris$Petal.Length)
+hist(iris$Sepal.Length)
+pie(table(iris$Species))
+boxplot(iris$Sepal.Width)

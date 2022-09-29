@@ -1,0 +1,11 @@
+ins=read.csv("20BCAB19_Insurance.csv",na.strings = "")
+View(ins)
+pie3D(table(ins$smoker),labels=c("No","Yes"),main="Smoker")
+ggplot() + aes(x = ins$smoker, y = ins$charges ) + geom_boxplot(show.legend = FALSE)
+mosaicplot(table(ins$sex,ins$smoker))
+
+covid=read.csv("20BCAB19_who_india.csv")
+View(covid)
+plot(covid$Cumulative_cases,covid$Cumulative_death, xlab="Covid cases", ylab="Covid deaths", main="Cases vs. Deaths",type="l")
+plot(covid$New_cases~as.Date(covid$Date_reported))
+plot(covid$New_deaths~as.Date(covid$Date_reported))
