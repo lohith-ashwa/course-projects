@@ -1,0 +1,102 @@
+ls -lrt
+ls -lrt Desktop
+hadoop fs -ls 
+hadoop fs -rm -r lohith
+hadoop fs -mkdir lohith
+hadoop fs -copyFromLocal /home/cloudera/Desktop/emp.csv lohith/emp.csv
+hadoop fs -ls lohith
+
+
+pig
+grunt>pwd
+grunt> cd lohith
+grunt> A = load 'emp.csv' using PigStorage(',') as (eid: int, ename: chararray, epos: chararray, esal: int, ecom: int, edpno: int);
+grunt> dump A
+grunt> B = filter A by epos=='ANALYST';
+grunt> dump B;
+grunt> C = filter A by epos=='MANAGER' and edpno==20;
+grunt> dump C;
+grunt> D = limit A 5; 
+# it displays the first 5 records int the dataset but ordered based on one of the columns mostly the first one is what i think 
+# the column names are considered as one row so if we want first 5 rows we have to enter "......limit A 6;"
+grunt> dump D;
+grunt> E = order A by esal;
+# for descending order type "..... esal desc"
+grunt> dump E;
+grunt> store E into '/users/cloudera/lohith/pigout' using PigStorage(',');
+# trying to read the stored file 
+grunt> quit 
+hadoop fs -ls lohith/pigout
+hadoop fs -cat lohith/pigout/part-r-00000
+grunt> F = foreach A generate *, ecom*3 as Bonus, SUBSTRING(ename,0,3) as emailid;
+grunt> dump F;
+grunt> G = foreach A generate eid, $1;
+# $1 basically refers to ename column only. This a methos of using numbers to refer to columns instead of names.
+grunt> dump G;
+grunt> I = group A by edpno;
+grunt> dump I;
+grunt> J = foreach I generate $0 as deptnogrouped, COUNT($1) as frequency;
+grunt> dump J;
+grunt> K = group A by (edpno, epos); # to group by more than one column 
+grunt> dump K;
+grunt> split A into B if edpno==10 , C if esal>4000;
+grunt> dump B;
+grunt> dump C;
+grunt> quit
+# copying dept.csv into HDFS so that it can be loaded into PIG to perform join operations which require two tables
+hadoop fs -copyFromLocal /home/cloudera/Desktop/dept.csv lohith/dept.csv
+hadoop fs -ls lohith # verified that file has been copied to HDFS
+pig
+grunt>pwd
+grunt> cd lohith
+grunt> A = load 'emp.csv' using PigStorage(',') as (eid: int, ename: chararray, epos: chararray, esal: int, ecom: int, edpno: int);
+grunt> dump A; 
+grunt> B = load 'dept.csv' using PigStorage(',') as (edpno : int, epos : chararray, ecity : chararray);
+grunt> dump B;
+grunt> C = join A by edpno, B by edpno;
+grunt> dump C;
+grunt> D = join A by edpno RIGHT OUTER, B by edpno;
+grunt> dump D;
+grunt> E = foreach D generate A::eid, B::ecity;
+grunt> dump E;
+grunt> quit
+vi text
+pwd
+hadoop fs -copyFromLocal /home/cloudera/text lohith/text
+hadoop fs -ls lohith
+hadoop fs -cat lohith/text
+pig
+grunt> pwd          
+grunt> cd lohith
+grunt> lines = load 'text' as (line:chararray);
+grunt> dump lines;
+grunt> token = foreach lines generate TOKENIZE(line);
+grunt> dump token;
+grunt> flat = foreach token generate FLATTEN($0);
+grunt> dump flat;
+grunt> groups = group flat by $0;
+grunt> dump groups;
+grunt> wordcount = foreach groups generate $0 as word, COUNT($1) as word_frequency;
+grunt> dump wordcount;
+grunt> quit
+
+
+hive
+hive> show databases;
+hive> create table emp (eid int, ename string, epos string, esal int, ecom int, edpno int) row format delimited fields terminated by ',';
+hive> describe emp;
+hive> load data local inpath '/home/cloudera/Desktop/emp.csv' into table emp;
+hive> select * from emp;
+hive> create external table extemp(eid int, ename string, epos string, esal int, ecom int, edpno int) row format delimited fields terminated by ',' location '/user/cloudera/lohith/extemp';
+hive> load data local inpath '/home/cloudera/Desktop/emp.csv' into table extemp; # loading data into the external table "extemp"
+hive> select * from extemp;
+hive> quit;
+# checking if the external table has been saved in the mentioned directory
+hadoop fs -ls lohith
+# displaying the contents of the file using pig
+pig
+grunt> pwd
+grunt> cd lohith
+grunt> cat extemp
+# the table is saved hence can conclude that it has been externally saved.
+grunt> quit
